@@ -1,41 +1,79 @@
-import React from 'react';
-
-import PageHeader from '../../components/PageHeader';
-import TeacherItem from '../../components/TeacherItem';
+import React, { useState, FormEvent } from 'react';
 
 import './styles.css';
 
+import PageHeader from '../../components/PageHeader';
+import TeacherItem, { Teacher } from '../../components/TeacherItem';
+import Input from '../../components/Input';
+import Select from '../../components/Select';
+import api from '../../services/api';
+
 function TeacherList() {
+    const [subject, setSubject] = useState('');
+    const [weekday, setWeekday] = useState('');
+    const [time, setTime] = useState('');
+    const [teachers, setTeachers] = useState([]);
+
+    async function searchTeachers(e: FormEvent) {
+        e.preventDefault();
+
+        await api.get('classes', {
+                params: {
+                    subject, weekday, time
+                }
+            })
+            .then(resp => setTeachers(resp.data))
+            .catch(error => alert(error.message));
+    }
+
     return (
         <div id="page-teacher-list" className="container">
             <PageHeader title="Estes são os proffys disponíveis">
-                <form id="search-teachers">
-                    <div className="input-block">
-                        <label htmlFor="subject">Matéria</label>
-                        <input type="text" id="subject" />
-                    </div>
-                    <div className="input-block">
-                        <label htmlFor="weekday">Dia da semana</label>
-                        <input type="text" id="weekday" />
-                    </div>
-                    <div className="input-block">
-                        <label htmlFor="time">Hora</label>
-                        <input type="text" id="time" />
-                    </div>
+                <form id="search-teachers" onSubmit={searchTeachers}>
+                    <Select
+                        label="Matéria"
+                        name="subject"
+                        value={subject}
+                        options={[
+                            { value: 'Artes', label: 'Artes' },
+                            { value: 'Matemática', label: 'Matemática' },
+                            { value: 'Ciências', label: 'Ciências' },
+                            { value: 'Geografia', label: 'Geografia' },
+                            { value: 'Português', label: 'Português' },
+                            { value: 'História', label: 'História' }
+                        ]}
+                        onChange={e => setSubject(e.target.value)}
+                    />
+                    <Select
+                        label="Dia da semana"
+                        name="weekday"
+                        value={weekday}
+                        options={[
+                            { value: '0', label: 'Domingo' },
+                            { value: '1', label: 'Segunda-feira' },
+                            { value: '2', label: 'Terça-feira' },
+                            { value: '3', label: 'Quarta-feira' },
+                            { value: '4', label: 'Quinta-feira' },
+                            { value: '5', label: 'Sexta-feira' },
+                            { value: '6', label: 'Sábado' }
+                        ]}
+                        onChange={e => setWeekday(e.target.value)}
+                    />
+                    <Input label="Hora" name="time" type="time"
+                        value={time}
+                        onChange={e => setTime(e.target.value)} />
+                    <button type='submit'>
+                        Buscar
+                    </button>
                 </form>
             </PageHeader>
 
             <main>
-                <TeacherItem
-                    urlImg="https://avatars2.githubusercontent.com/u/2254731?s=460&u=0ba16a79456c2f250e7579cb388fa18c5c2d7d65&v=4"
-                    name="Diego Fernandes"
-                    subject="História"
-                    price="80,00" />
-                <TeacherItem
-                    urlImg="https://avatars3.githubusercontent.com/u/29418991?s=100&v=4"
-                    name="Bruno Filho"
-                    subject="Matemática"
-                    price="95,00" />
+                {teachers.map((teacher: Teacher) => {
+                    return (
+                        <TeacherItem key={teacher.id} teacher={teacher} />
+                    )
+                })}
             </main>
         </div>
     )
